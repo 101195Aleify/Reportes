@@ -1,5 +1,4 @@
 flask
-sqlite3
 localtunnel
 pdf_generator
 excel_generator
