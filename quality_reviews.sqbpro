@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="quality_reviews.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser query pragmas" current="2"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="2899"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="Inspector" custom_title="0" dock_id="1" table="4,9:mainInspector"/><dock_state state="000000ff00000000fd0000000100000002000005bb00000398fc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000000005bb0000011e00ffffff000002690000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="Inspector" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="35"/><column index="2" value="135"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1*">-- Eliminar la tabla si ya existe
+DROP TABLE IF EXISTS Producto;
+DROP TABLE IF EXISTS ProductoRelaciones;
+
+-- Crear la tabla de productos
+CREATE TABLE Producto (
+    ProductoID INTEGER PRIMARY KEY,
+    Nombre TEXT NOT NULL UNIQUE
+);
+
+-- Insertar datos en Producto
+INSERT INTO Producto (ProductoID, Nombre) VALUES
+(1, 'Crema Facial Hidratante'),
+(2, 'Shampoo Reparador de Cabello'),
+(3, 'Acondicionador Suavizante'),
+(4, 'Gel Limpiador Facial'),
+(5, 'Exfoliante Corporal'),
+(6, 'Protector Solar SPF 50'),
+(7, 'Serum Antiarrugas'),
+(8, 'Desodorante en Spray'),
+(9, 'Crema Anti Celulitis'),
+(10, 'Mascarilla Capilar');
+
+-- Crear la tabla de relaciones de productos
+CREATE TABLE ProductoRelaciones (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    ProductoID INTEGER NOT NULL,
+    NombreProductoRelacion TEXT NOT NULL,
+    FOREIGN KEY (ProductoID) REFERENCES Producto(ProductoID) -- Corregir aquí
+);
+
+-- Insertar relaciones corregidas
+INSERT INTO ProductoRelaciones (ProductoID, NombreProductoRelacion) VALUES
+(1, 'Serum Facial'),
+(1, 'Crema Hidratante'),
+(1, 'Crema Antiarrugas'),
+(2, 'Acondicionador Suavizante'),
+(2, 'Shampoo Voluminizador'),
+(3, 'Acondicionador Reparador'),
+(4, 'Limpiador en Espuma'),
+(5, 'Exfoliante Facial'),
+(6, 'Protector Solar SPF 30'),
+(7, 'Serum Hidratante'),
+(8, 'Desodorante Roll-on'),
+(9, 'Crema Reductora'),
+(10, 'Mascarilla Hidratante');
+
+
+SELECT * FROM producto
+SELECT * FROM ProductoRelaciones
+
+select * from reviews order by 1 desc
+
+
+ALTER TABLE reviews
+ADD COLUMN etiquetas_equipos INTEGER DEFAULT 0;
+
+ALTER TABLE reviews
+ADD COLUMN identificacion INTEGER DEFAULT 0;
+
+ALTER TABLE reviews
+ADD COLUMN materias_primas INTEGER DEFAULT 0;
+
+ALTER TABLE reviews
+ADD COLUMN identificacion_lote INTEGER DEFAULT 0;
+
+ALTER TABLE reviews
+ADD COLUMN limpieza_area INTEGER DEFAULT 0;
+
+ALTER TABLE reviews
+ADD COLUMN orden_area INTEGER DEFAULT 0;
+
+ALTER TABLE reviews
+ADD COLUMN limpieza_implementos INTEGER DEFAULT 0;
+
+ALTER TABLE reviews
+ADD COLUMN utensilios INTEGER DEFAULT 0;
+
+ALTER TABLE reviews
+ADD COLUMN orden_almacen INTEGER DEFAULT 0;
+
+ALTER TABLE reviews
+ADD COLUMN almacen INTEGER DEFAULT 0;
+
+
+
+CREATE TABLE reviews_new (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL,
+    hora TEXT NOT NULL,
+    producto TEXT NOT NULL,
+    lote TEXT NOT NULL,
+    odp TEXT NOT NULL,
+    etiquetas_de_identificacion INTEGER DEFAULT 0,
+    materia_primas_identificadas INTEGER DEFAULT 0,
+    limpieza_del_area INTEGER DEFAULT 0,
+    orden_de_area INTEGER DEFAULT 0,
+    limpieza_de_utensilitos INTEGER DEFAULT 0,
+    orden_del_almacen INTEGER DEFAULT 0,
+    inspector_de_calidad TEXT,
+    observaciones TEXT
+);
+
+
+
+INSERT INTO reviews_new (id, fecha, hora, producto, lote, odp, etiquetas_de_identificacion, materia_primas_identificadas, limpieza_del_area, orden_de_area, limpieza_de_utensilitos, orden_del_almacen, inspector_de_calidad, observaciones)
+SELECT id, fecha, hora, producto, lote, odp, etiquetas_equipos, materias_primas, limpieza_area, orden_area, limpieza_implementos, orden_almacen, inspector, observaciones
+FROM reviews;
+
+DROP TABLE reviews;
+ALTER TABLE reviews_new RENAME TO reviews;
+
+
+select * from reviews_new
+
+CREATE TABLE reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL,
+    hora TEXT NOT NULL,
+    producto TEXT NOT NULL,
+    lote TEXT NOT NULL,
+    odp TEXT NOT NULL,
+    etiquetas_de_identificacion INTEGER DEFAULT 0,
+    materia_primas_identificadas INTEGER DEFAULT 0,
+    limpieza_del_area INTEGER DEFAULT 0,
+    orden_de_area INTEGER DEFAULT 0,
+    limpieza_de_utensilitos INTEGER DEFAULT 0,
+    orden_del_almacen INTEGER DEFAULT 0,
+    inspector TEXT,
+    observaciones TEXT
+);
+
+select *from reviews</sql><current_tab id="0"/></tab_sql></sqlb_project>
