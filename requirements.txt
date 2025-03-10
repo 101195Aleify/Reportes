@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 flask
 localtunnel
 pdf_generator
@@ -8,15 +7,4 @@ time
 database
 threading
 pandas
-=======
-flask
-localtunnel
-pdf_generator
-excel_generator
-threading
-time
-database
-threading
-pandas
->>>>>>> 1e8d6730b9d3458ad158bb847cedc0d045818701
 reportlab
