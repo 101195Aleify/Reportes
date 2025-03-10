@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisión de Calidad</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        window.onload = function() {
+            var today = new Date();
+            var date = today.getFullYear() + '-' + 
+                       (today.getMonth() + 1).toString().padStart(2, '0') + '-' + 
+                       today.getDate().toString().padStart(2, '0');
+            document.querySelector('[name="fecha"]').value = date;
+
+            function actualizarHora() {
+                var now = new Date();
+                var hours = now.getHours().toString().padStart(2, '0');
+                var minutes = now.getMinutes().toString().padStart(2, '0');
+                var time = hours + ':' + minutes;
+                document.querySelector('[name="hora"]').value = time;
+            }
+
+            actualizarHora();
+            setInterval(actualizarHora, 60000);
+        };
+
+        function toggleCremaSubmenu() {
+            var productoSelect = document.querySelector('[name="producto"]');
+            var cremaMenu = document.getElementById('crema-submenu');
+            var productoNombre = productoSelect.value;
+
+            if (productoNombre) {
+                $.get('/get_relacionados_nombre/' + encodeURIComponent(productoNombre), function(data) {
+                    console.log("Productos relacionados:", data);
+                    var relacionados = data;
+                    var select = $('#crema-submenu select');
+                    select.empty();
+                    select.append('<option value="">Seleccione Opción</option>');
+                    if (relacionados.length === 0) {
+                        console.log("No se encontraron productos relacionados para:", productoNombre);
+                        cremaMenu.style.display = 'none';
+                    } else {
+                        relacionados.forEach(function(rel) {
+                            select.append('<option value="' + rel + '">' + rel + '</option>');
+                        });
+                        cremaMenu.style.display = 'block';
+                    }
+                }).fail(function(xhr, status, error) {
+                    console.log("Error al cargar productos relacionados:", error);
+                    cremaMenu.style.display = 'none';
+                });
+            } else {
+                cremaMenu.style.display = 'none';
+                $('#crema-submenu select').empty().append('<option value="">Seleccione Opción</option>');
+            }
+        }
+
+        function imprimirTabla() {
+            var fechaFiltro = document.querySelector('[name="fecha_filtro"]').value;
+            var inspectorFiltro = document.querySelector('[name="inspector_filtro"]').value;
+
+            var tablaOriginal = document.querySelector('.table');
+            var tablaClonada = tablaOriginal.cloneNode(true);
+            var filas = tablaClonada.querySelectorAll('tr');
+
+            filas.forEach(function(fila, index) {
+                if (index === 0) {
+                    // Eliminar la columna "Acciones" del encabezado
+                    fila.deleteCell(-1);
+                    return;
+                }
+                var fecha = fila.cells[0].innerText;
+                var inspector = fila.cells[11].innerText;
+
+                if ((fechaFiltro && fecha !== fechaFiltro) || (inspectorFiltro && inspector !== inspectorFiltro)) {
+                    fila.remove();
+                } else {
+                    // Eliminar la columna "Acciones" de las filas de datos
+                    fila.deleteCell(-1);
+                }
+            });
+
+            var estilos = `
+                <style>
+                    body {
+                        font-family: 'Arial', sans-serif;
+                        margin: 20mm;
+                        background-color: #f5f5f5;
+                    }
+                    .header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 20px;
+                    }
+                    .header img {
+                        max-width: 150px;
+                        height: auto;
+                    }
+                    .table {
+                        table-layout: fixed;
+                        width: 100%;
+                        border-collapse: collapse;
+                        background: #ffffff;
+                        font-size: 8px;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+                    }
+                    .table th, .table td {
+                        padding: 8px;
+                        border: 4px solid #ddd;
+                        text-align: center;
+                        overflow: hidden; /* Recorta el contenido que excede */
+                        text-overflow: ellipsis; /* Agrega puntos suspensivos si se recorta */
+                    }
+                    .table th {
+                        background: #004080;
+                        color: #ffffff;
+                        font-weight: bold;
+                        height: 40px; /* Altura fija para encabezados horizontales */
+                    }
+                    .table td {
+                        height: 30px; /* Altura fija para datos */
+                    }
+                    .vertical-text {
+                        writing-mode: vertical-rl;
+                        transform: rotate(180deg);
+                        text-align: center;
+                        padding: 5px;
+                        font-size: 11px;
+                        line-height: 1.2;
+                        font-weight: bold;
+                        color: #ffffff;
+                        background-color: #0066cc;
+                        border-bottom: 2px solid #003366;
+                        overflow: hidden; /* Recorta el contenido que excede */
+                    }
+                    th.vertical-text {
+                        width: 30px; /* Ancho fijo por defecto para texto vertical */
+                        height: 120px; /* Altura fija para texto vertical */
+                        vertical-align: bottom;
+                        word-wrap: break-word;
+                    }
+                    /* Ajuste específico para "Inspector de Calidad" */
+                    .table th:nth-child(12), .table td:nth-child(12) {
+                        width: 50px; /* Ancho mayor para Inspector de Calidad */
+                    }
+                    .table th:not(.vertical-text) {
+                        width: 80px; /* Ancho fijo para encabezados horizontales */
+                    }
+                    .table td:not(.vertical-text) {
+                        width: 80px; /* Ancho fijo para datos horizontales */
+                    }
+                    /* Excepción para "Observaciones" */
+                    .table th:nth-child(13), .table td:nth-child(13) {
+                        width: 150px; /* Ancho mayor para Observaciones */
+                    }
+                    .table tr:nth-child(even) {
+                        background: #f2f2f2;
+                    }
+                    @media print {
+                        .no-print { display: none; }
+                        body { margin: 0; background: #ffffff; }
+                        .table th {
+                            background: #004080 !important;
+                            color: #ffffff !important;
+                        }
+                        .vertical-text {
+                            background-color: #0066cc !important;
+                            color: #ffffff !important;
+                        }
+                    }
+                </style>
+            `;
+
+            var ventanaImpresion = window.open('', '', 'width=800,height=600');
+            ventanaImpresion.document.write(`
+                <html>
+                <head>
+                    <title>Registro de Revisiones de Calidad</title>
+                    ${estilos}
+                </head>
+                  <style>
+            /* Estilos para habilitar la impresión de gráficos de fondo */
+            @media print {
+                body {
+                    -webkit-print-color-adjust: exact; /* Para Chrome y Safari */
+                    print-color-adjust: exact; /* Para otros navegadores */
+                    color-adjust: exact;
+                }
+                img {
+                    display: block !important;
+                    visibility: visible !important;
+                    -webkit-print-color-adjust: exact;
+                }
+                .header img {
+                    max-height: 100px;
+                    width: auto;
+                }
+            }
+            ${estilos}
+        </style>
+                <body>
+                    <div class="header">
+                        <img src="/static/logo4.PNG" alt="Logo" /> <!-- Logo a la izquierda -->
+                        <div>
+                            <h1>FRANK POR LABORATORIOS S.A DE C.V</h1>
+                            <h4> <p  style="font-size: 20px; margin-top: 10px; text-align: center;">REVISIÓN DEL ÁREA (ALMACEN Y PESADO) </p></4> <!-- Segundo párrafo centrado -->
+                        </div>
+                        <img src="/static/logo4.PNG" alt="Logo" /> <!-- Logo a la derecha -->
+                    </div>
+                    ${tablaClonada.outerHTML}
+                </body>
+                </html>
+            `);
+            ventanaImpresion.document.close();
+
+            ventanaImpresion.onload = function() {
+                ventanaImpresion.focus();
+                ventanaImpresion.print();
+                //ventanaImpresion.close();
+            };
+        }
+    </script>
+    <style>
+        .table-responsive {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2 class="mb-4">Registro de Revisiones de Calidad</h2>
+        
+        <form action="/add" method="post" class="mb-4">
+            <div class="row g-3">
+                <div class="col-md-1">
+                    <input type="date" name="fecha" class="form-control" required>
+                </div>
+                <div class="col-md-1">
+                    <input type="time" name="hora" class="form-control" required>
+                </div>
+                <div class="col-md-2">
+                    <select name="producto" class="form-control" required onchange="toggleCremaSubmenu()">
+                        <option value="">Seleccione Producto</option>
+                        {% for producto in productos %}
+                            <option value="{{ producto[1] }}">{{ producto[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div id="crema-submenu" class="col-md-2" style="display: none;">
+                    <select name="tipo_crema" class="form-control">
+                        <option value="">Seleccione Opción</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <input type="text" name="lote" class="form-control" placeholder="Lote" required>
+                </div>
+                <div class="col-md-1">
+                    <input type="text" name="odp" class="form-control" placeholder="ODP" required>
+                </div>
+                <div class="col-md-1">
+                    <input type="checkbox" name="etiquetas_de_identificacion" value="1"> Etiquetas de Identificación
+                </div>
+                <div class="col-md-1">
+                    <input type="checkbox" name="materia_primas_identificadas" value="1"> Materia Primas Identificadas
+                </div>
+                <div class="col-md-1">
+                    <input type="checkbox" name="limpieza_del_area" value="1"> Limpieza del Área
+                </div>
+                <div class="col-md-1">
+                    <input type="checkbox" name="orden_de_area" value="1"> Orden de Área
+                </div>
+                <div class="col-md-1">
+                    <input type="checkbox" name="limpieza_de_utensilitos" value="1"> Limpieza de Utensilitos
+                </div>
+                <div class="col-md-1">
+                    <input type="checkbox" name="orden_del_almacen" value="1"> Orden del Almacén
+                </div>
+                <div class="col-md-2">
+                    <select name="inspector_de_calidad" class="form-control " required>
+                        <option value="">Seleccione Inspector</option>
+                        {% for inspector in inspectores %}
+                            <option value="{{ inspector[1] }}">{{ inspector[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" name="observaciones" class="form-control" placeholder="Observaciones">
+                </div>
+                <div class="col-md-12 text-center">
+                    <button type="submit" class="btn btn-primary">Agregar</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="mb-3">
+            <a href="/download_pdf" class="btn btn-success">Descargar PDF</a>
+            <a href="/download_excel" class="btn btn-primary">Descargar Excel</a>
+            <button onclick="imprimirTabla()" class="btn btn-info">Imprimir Tabla</button>
+        </div>
+
+        <!-- Filtros para la impresión -->
+        <div class="mb-3">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="date" name="fecha_filtro" class="form-control" placeholder="Filtrar por Fecha">
+                </div>
+                <div class="col-md-3">
+                    <select name="inspector_filtro" class="form-control">
+                        <option value="">Filtrar por Inspector</option>
+                        {% for inspector in inspectores %}
+                            <option value="{{ inspector[1] }}">{{ inspector[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Fecha de Revisión</th>
+                        <th>Hora</th>
+                        <th>Producto</th>
+                        <th>Lote</th>
+                        <th>ODP</th>
+                        <th class="vertical-text">Etiquetas de Identificación</th>
+                        <th class="vertical-text">Materia Primas Identificadas</th>
+                        <th class="vertical-text">Limpieza del Área</th>
+                        <th class="vertical-text">Orden de Área</th>
+                        <th class="vertical-text">Limpieza de Utensilitos</th>
+                        <th class="vertical-text">Orden del Almacén</th>
+                        <th class="vertical-text">Inspector de Calidad</th>
+                        <th>Observaciones</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in reviews %}
+                    <tr>
+                        <td>{{ review[1] }}</td>
+                        <td>{{ review[2] }}</td>
+                        <td>{{ review[3] }}</td>
+                        <td>{{ review[4] }}</td>
+                        <td>{{ review[5] }}</td>
+                        <td>{{ '✓' if review[6] == 1 or review[6] == '1' else '✗' }}</td>
+                        <td>{{ '✓' if review[7] == 1 or review[7] == '1' else '✗' }}</td>
+                        <td>{{ '✓' if review[8] == 1 or review[8] == '1' else '✗' }}</td>
+                        <td>{{ '✓' if review[9] == 1 or review[9] == '1' else '✗' }}</td>
+                        <td>{{ '✓' if review[10] == 1 or review[10] == '1' else '✗' }}</td>
+                        <td>{{ '✓' if review[11] == 1 or review[11] == '1' else '✗' }}</td>
+                        <td>{{ review[12] }}</td>
+                        <td>{{ review[13] }}</td>
+                        <td>
+                            <a href="/delete/{{ review[0] }}" class="btn btn-danger btn-sm">Eliminar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
