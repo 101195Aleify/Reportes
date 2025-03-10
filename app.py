@@ -1,11 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file
 import threading
 import time
-from database import get_reviews, get_productos, add_review, delete_review, get_productos_relacionados, get_inspector
+from database import get_reviews, get_productos, add_review, delete_review, get_productos_relacionados, get_inspector, get_connection
 from localtunnel import start_localtunnel
 from pdf_generator import generate_pdf_report
 from excel_generator import generate_excel_report  # Importar la nueva función
 import pyodbc  # Importar pyodbc para la conexión a la base de datos
+import os
 
 app = Flask(__name__)
 
@@ -95,8 +96,13 @@ def download_excel():
     # Preparar el Excel para descarga
     return send_file(excel_buffer, as_attachment=True, download_name=f"reporte_revisiones_{time.strftime('%Y%m%d_%H%M%S')}.xlsx", mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
+
 if __name__ == '__main__':
-    port = 5000
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 8000)))
+
+
+#if __name__ == '__main__':
+#    port = 5000
     #threading.Thread(target=lambda: app.run(debug=True, port=port, use_reloader=False)).start()
     #time.sleep(3)
     #start_localtunnel(port)
