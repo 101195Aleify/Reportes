@@ -97,6 +97,6 @@ def download_excel():
 
 if __name__ == '__main__':
     port = 5000
-    threading.Thread(target=lambda: app.run(debug=True, port=port, use_reloader=False)).start()
-    time.sleep(3)
+    #threading.Thread(target=lambda: app.run(debug=True, port=port, use_reloader=False)).start()
+    #time.sleep(3)
     #start_localtunnel(port)
