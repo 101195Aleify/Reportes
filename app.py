@@ -1,11 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file
 import threading
 import time
-import sqlite3
 from database import get_reviews, get_productos, add_review, delete_review, get_productos_relacionados, get_inspector
 from localtunnel import start_localtunnel
 from pdf_generator import generate_pdf_report
 from excel_generator import generate_excel_report  # Importar la nueva función
+import pyodbc  # Importar pyodbc para la conexión a la base de datos
 
 app = Flask(__name__)
 
@@ -66,16 +66,16 @@ def get_relacionados(producto_id):
 
 @app.route('/get_relacionados_nombre/<string:producto_nombre>')
 def get_relacionados_nombre(producto_nombre):
-    with sqlite3.connect('quality_reviews.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT ProductoID FROM Producto WHERE Nombre = ?", (producto_nombre,))
-        producto_id = cursor.fetchone()
-        if producto_id:
-            producto_id = producto_id[0]
-            relacionados = get_productos_relacionados(producto_id)
-            return jsonify(relacionados)
-        else:
-            return jsonify([])
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT ProductoID FROM Producto WHERE Nombre = ?", (producto_nombre,))
+    producto_id = cursor.fetchone()
+    if producto_id:
+        producto_id = producto_id[0]
+        relacionados = get_productos_relacionados(producto_id)
+        return jsonify(relacionados)
+    else:
+        return jsonify([])
 
 @app.route('/download_pdf')
 def download_pdf():
