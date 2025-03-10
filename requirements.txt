@@ -1,5 +1,4 @@
 flask==3.0.3
-reportlab
-openpyxl
-pandas
-excel_generator
+reportlab==4.2.0
+openpyxl==3.1.4
+pandas==2.2.2
