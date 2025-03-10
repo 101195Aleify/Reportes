@@ -1,10 +1,4 @@
-flask
-localtunnel
-pdf_generator
-excel_generator
-threading
-time
-database
-threading
-pandas
+flask==3.0.3
 reportlab
+openpyxl
+pandas
