@@ -96,13 +96,5 @@ def download_excel():
     # Preparar el Excel para descarga
     return send_file(excel_buffer, as_attachment=True, download_name=f"reporte_revisiones_{time.strftime('%Y%m%d_%H%M%S')}.xlsx", mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 8000)))
-
-
-#if __name__ == '__main__':
-#    port = 5000
-    #threading.Thread(target=lambda: app.run(debug=True, port=port, use_reloader=False)).start()
-    #time.sleep(3)
-    #start_localtunnel(port)
