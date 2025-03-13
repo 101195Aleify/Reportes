@@ -126,3 +126,46 @@ def delete_nuevo_reporte(id):
     cursor.execute("DELETE FROM nuevo_reporte WHERE id = ?", (id,))
     conn.commit()
     conn.close()
+
+# Funciones para el reporte de área
+def add_reporte_area(fecha, hora, producto, lote, lugar_fabricacion, tanque_ap1, tanque_ap2, tanque_ap3, 
+                     limpios_identificados, orden_limpieza_area, tanque_agua_proceso, inspector, observaciones):
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO reporte_area (fecha, hora, producto, lote, lugar_fabricacion, tanque_ap1, tanque_ap2, tanque_ap3, 
+                                     limpios_identificados, orden_limpieza_area, tanque_agua_proceso, inspector_calidad, observaciones)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', 
+            (fecha, hora, producto, lote, lugar_fabricacion, tanque_ap1, tanque_ap2, tanque_ap3, 
+             limpios_identificados, orden_limpieza_area, tanque_agua_proceso, inspector, observaciones))
+        print(f"Guardado en reporte_area: fecha={fecha}, hora={hora}, producto={producto}, lote={lote}, "
+              f"lugar_fabricacion={lugar_fabricacion}, tanque_ap1={tanque_ap1}, tanque_ap2={tanque_ap2}, "
+              f"tanque_ap3={tanque_ap3}, limpios_identificados={limpios_identificados}, "
+              f"orden_limpieza_area={orden_limpieza_area}, tanque_agua_proceso={tanque_agua_proceso}, "
+              f"inspector_calidad={inspector}, observaciones={observaciones}")
+        conn.commit()
+    except pyodbc.Error as e:
+        print(f"Error al guardar en reporte_area: {str(e)}")
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+def get_reportes_area():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM reporte_area")
+    reportes = cursor.fetchall()
+    for reporte in reportes:
+        print(f"Reporte de área cargado: {reporte}")
+    print("Datos obtenidos de reporte_area:", reportes)
+    conn.close()
+    return reportes
+
+def delete_reporte_area(id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM reporte_area WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()

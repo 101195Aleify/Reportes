@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisión del Área</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Incluir jsPDF y autotable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <script src="/static/pdfGenerator.js"></script>
+    <script src="/static/imprimirTablaGenerica.js"></script>
+    <script>
+        function configurarImpresion() {
+            const tableSelector = '.area-table';
+            const filtersConfig = {
+                'fecha_filtro': { index: 0 },
+                'inspector_filtro': { index: 11 }
+            };
+
+            const printButton = document.querySelector('.btn-info');
+            if (printButton) {
+                printButton.addEventListener('click', function() {
+                    try {
+                        imprimirTablaGenerica(tableSelector, filtersConfig, "REVISIÓN DEL ÁREA (FABRICACIÓN, AP1, AP2, AP3)");
+                    } catch (error) {
+                        console.error('Error al imprimir:', error);
+                        alert('Ocurrió un error al generar la impresión');
+                    }
+                });
+            }
+        }
+
+        function toggleCremaSubmenu() {
+    var productoSelect = document.querySelector('[name="producto"]'); // Obtiene el select de productos
+    var cremaMenu = document.getElementById('crema-submenu'); // Obtiene el div del submenú
+    var productoNombre = productoSelect.value; // Obtiene el valor seleccionado (ej. "Crema A")
+
+    if (productoNombre) { // Si hay un producto seleccionado
+        $.get('/get_relacionados_nombre/' + encodeURIComponent(productoNombre), function(data) {
+            console.log("Productos relacionados:", data); // Muestra los datos recibidos en consola
+            var relacionados = data; // Los datos devueltos por el backend
+            var select = $('#crema-submenu select'); // Selecciona el <select> dentro del submenú
+            select.empty(); // Limpia las opciones actuales
+            select.append('<option value="">Seleccione Opción</option>'); // Agrega la opción por defecto
+            
+            if (relacionados.length === 0) { // Si no hay productos relacionados
+                console.log("No se encontraron productos relacionados para:", productoNombre);
+                cremaMenu.style.display = 'none'; // Oculta el submenú
+            } else { // Si hay productos relacionados
+                relacionados.forEach(function(rel) { // Itera sobre los relacionados
+                    select.append('<option value="' + rel + '">' + rel + '</option>'); // Agrega cada opción
+                });
+                cremaMenu.style.display = 'block'; // Muestra el submenú
+            }
+        }).fail(function(xhr, status, error) { // Manejo de errores
+            console.log("Error al cargar productos relacionados:", error);
+            cremaMenu.style.display = 'none'; // Oculta el submenú si falla la solicitud
+        });
+    } else { // Si no hay producto seleccionado
+        cremaMenu.style.display = 'none'; // Oculta el submenú
+        $('#crema-submenu select').empty().append('<option value="">Seleccione Opción</option>'); // Resetea el submenú
+    }
+};
+
+        window.onload = function() {
+            var today = new Date();
+            var date = today.getFullYear() + '-' + 
+                       (today.getMonth() + 1).toString().padStart(2, '0') + '-' + 
+                       today.getDate().toString().padStart(2, '0');
+            document.querySelector('[name="fecha"]').value = date;
+
+            function actualizarHora() {
+                var now = new Date();
+                var hours = now.getHours().toString().padStart(2, '0');
+                var minutes = now.getMinutes().toString().padStart(2, '0');
+                var time = hours + ':' + minutes;
+                document.querySelector('[name="hora"]').value = time;
+            }
+            actualizarHora();
+            setInterval(actualizarHora, 60000);
+
+            // Configurar la impresión
+            if (typeof imprimirTablaGenerica === 'undefined') {
+                console.error('El script imprimirTablaGenerica.js no se cargó correctamente');
+            } else {
+                configurarImpresion();
+            }
+        };
+
+        function generateAreaPDF() {
+            var fechaFiltro = document.querySelector('[name="fecha_filtro"]').value;
+            var inspectorFiltro = document.querySelector('[name="inspector_filtro"]').value;
+
+            var filters = {
+                fecha: fechaFiltro,
+                inspector: inspectorFiltro
+            };
+
+            var headerConfig = {
+                title: "Revisión del Área",
+                html: `
+                    <div class="header">
+                        <img src="/static/logo4.PNG" alt="Logo" />
+                        <div>
+                            <h1 style="font-size: 24px; margin-bottom: 5px;">FRANK POR LABORATORIOS S.A DE C.V</h1>
+                            <h4 style="font-size: 16px; margin-top: 5px; text-align: center;">ASEGURAMIENTO DE CALIDAD</h4>
+                            <h4 style="font-size: 16px; margin-top: 5px; text-align: center;">REVISIÓN DEL ÁREA (FABRICACIÓN, AP1, AP2, AP3)</h4>
+                        </div>
+                        <img src="/static/logo4.PNG" alt="Logo" />
+                    </div>
+                `
+            };
+
+            generatePDF('.area-table', filters, headerConfig);
+        }
+    </script>
+    <style>
+        .table-responsive {
+            overflow-x: auto;
+        }
+        .vertical-text {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            text-align: center;
+            padding: 5px;
+            font-size: 11px;
+            line-height: 1.2;
+        }
+        .table th, .table td {
+            padding: 8px;
+            text-align: center;
+        }
+        .table th {
+            background: #004080;
+            color: #ffffff;
+            font-weight: bold;
+        }
+        .table td {
+            background: #ffffff;
+        }
+        .table tr:nth-child(even) td {
+            background: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2 class="mb-4">Revisión del Área (Fabricación, AP1, AP2, AP3)</h2>
+        
+        <!-- Formulario para ingresar datos -->
+        <form action="/add_reporte_area" method="post" class="mb-4">
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <label for="fecha" class="form-label">Fecha de Revisión</label>
+                    <input type="date" name="fecha" class="form-control" required>
+                </div>
+                <div class="col-md-2">
+                    <label for="hora" class="form-label">Hora</label>
+                    <input type="time" name="hora" class="form-control" required>
+                </div>
+
+
+                <div class="col-md-2">
+                    <select name="producto" class="form-control" required onchange="toggleCremaSubmenu()">
+                        <option value="">Seleccione Producto</option>
+                        {% for producto in productos %}
+                            <option value="{{ producto[1] }}">{{ producto[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="crema-submenu" class="col-md-2" style="display: none;">
+                    <select name="tipo_crema" class="form-control">
+                        <option value="">Seleccione Opción</option>
+                    </select>
+                </div>
+                
+
+
+                <div class="col-md-2">
+                    <label for="lote" class="form-label">Lote</label>
+                    <input type="text" name="lote" class="form-control" placeholder="Lote" required>
+                </div>
+                <div class="col-md-3">
+                    <label for="lugar_fabricacion_y_tanque_de_fabricacion" class="form-label">Lugar de Fabricación y Tanque Fabricación</label>
+                    <input type="text" name="lugar_fabricacion_y_tanque_de_fabricacion" class="form-control" placeholder="Lugar de Fabricación y Tanque" required>
+                </div>
+                <!-- Campo agregado: limpieza_area -->
+                <div class="col-md-2">
+                    <label class="form-label">Limpieza de área</label>
+                    <input type="checkbox" name="limpieza_area" value="1"> Sí
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Tanques Limpios e Identificados</label>
+                    <div>
+                        <input type="checkbox" name="tanque_ap1" value="1"> AP1
+                    </div>
+                    <div>
+                        <input type="checkbox" name="tanque_ap2" value="1"> AP2
+                    </div>
+                    <div>
+                        <input type="checkbox" name="tanque_ap3" value="1"> AP3
+                    </div>
+                </div>
+                <!-- 
+                <div class="col-md-2">
+                    <label class="form-label">Limpios e Identificados</label>
+                    <input type="checkbox" name="limpios_identificados" value="1"> Sí
+                </div>
+                -->
+                <div class="col-md-2">
+                    <label class="form-label">Orden del Área</label>
+                    <input type="checkbox" name="orden_del_area" value="1"> Sí
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Identificación Tanque de Agua de Proceso</label>
+                    <input type="checkbox" name="identificacion_tanque_agua_proceso" value="1"> Sí
+                </div>
+                <div class="col-md-2">
+                    <label for="inspector_calidad" class="form-label">Inspector de Calidad</label>
+                    <select name="inspector_calidad" class="form-control" required>
+                        <option value="">Seleccione Inspector</option>
+                        {% for inspector in inspectores %}
+                            <option value="{{ inspector[1] }}">{{ inspector[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- Campo agregado: ordenes_de_fabricacion -->
+                <div class="col-md-3">
+                    <label for="ordenes_de_fabricacion" class="form-label">Órdenes de Fabricación</label>
+                    <input type="text" name="ordenes_de_fabricacion" class="form-control" placeholder="Órdenes de fabricación">
+                </div>
+                <div class="col-md-3">
+                    <label for="observaciones" class="form-label">Observaciones</label>
+                    <input type="text" name="observaciones" class="form-control" placeholder="Observaciones">
+                </div>
+                <div class="col-md-12 text-center">
+                    <button type="submit" class="btn btn-primary">Agregar</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Botones para descargar PDF y Excel -->
+        <div class="mb-3">
+            <a href="/download_pdf_area" class="btn btn-success">Descargar PDF</a>
+            <a href="/download_excel_area" class="btn btn-primary">Descargar Excel</a>
+            <button class="btn btn-info">Imprimir Reporte</button> <!-- Removido el onclick -->
+        </div>
+
+        <!-- Filtros para la impresión -->
+        <div class="mb-3">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="fecha_filtro" class="form-label">Filtrar por Fecha</label>
+                    <input type="date" name="fecha_filtro" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label for="inspector_filtro" class="form-label">Filtrar por Inspector</label>
+                    <select name="inspector_filtro" class="form-control">
+                        <option value="">Seleccione Inspector</option>
+                        {% for inspector in inspectores %}
+                            <option value="{{ inspector[1] }}">{{ inspector[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla para mostrar los datos -->
+        <div class="table-responsive">
+            <table class="area-table table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Fecha de Revisión</th>
+                        <th>Hora</th>
+                        <th>Producto</th>
+                        <th>Lote</th>
+                        <th>Lugar de Fabricación y Tanque Fabricación</th>
+                        <th class="vertical-text">Limpieza del Área</th>
+                        <th class="vertical-text">Tanques del Área AP1</th>
+                        <th class="vertical-text">Tanques del Área AP2</th>
+                        <th class="vertical-text">Tanques del Área AP3</th>
+                        <th class="vertical-text">Orden  del Área</th>
+                        <th class="vertical-text">Identificacio de Tanque de agua de proceso</th>
+                        <th>Inspector de Calidad</th>
+                        <th class="vertical-text">Ordenes de fabricación</th>
+                        <th>Observaciones</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in reviews %}
+                    <tr>
+                        <td>{{ review[1] }}</td> <!-- Fecha -->
+                        <td>{{ review[2] }}</td> <!-- Hora -->
+                        <td>{{ review[3] }}</td> <!-- Producto -->
+                        <td>{{ review[4] }}</td> <!-- Lote -->
+                        <td>{{ review[5] }}</td> <!-- Lugar de Fabricacion-->
+                        <td>{{ '✓' if review[6] == 1 or review[6] == '1' else '✗' }}</td> <!-- Limpieza de área -->
+                        <td>{{ '✓' if review[7] == 1 or review[7] == '1' else '✗' }}</td> <!-- AP1 -->
+                        <td>{{ '✓' if review[8] == 1 or review[8] == '1' else '✗' }}</td> <!-- AP2 -->
+                        <td>{{ '✓' if review[9] == 1 or review[9] == '1' else '✗' }}</td> <!-- AP3 -->
+                        <td>{{ '✓' if review[10] == 1 or review[10] == '1' else '✗' }}</td> <!-- Orden del area -->
+                        <td>{{ '✓' if review[11] == 1 or review[11] == '1' else '✗' }}</td> <!-- Tanques de agua -->
+                        <td>{{ review[12] }}</td> <!-- Inspector -->
+                        <td>{{ '✓' if review[13] == 1 or review[13] == '1' else '✗' }}</td> <!-- Tanques de agua -->
+                        <td>{{ review[14] }}</td> <!-- Observaciones -->
+                        <td>
+                            <a href="/delete_reporte_area/{{ review[0] }}" class="btn btn-danger btn-sm">Eliminar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
